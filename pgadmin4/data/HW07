@@ -1,0 +1,188 @@
+--1
+SELECT category_name, description 
+FROM categories 
+ORDER BY category_name
+
+--2
+SELECT Contact_Name, Company_Name, Contact_Title ,Phone
+FROM customers
+ORDER BY Phone
+
+--3
+SELECT upper(first_name) AS first_name, UPPER(last_name) AS last_name
+FROM employees
+ORDER BY hire_date
+
+--4
+SELECT order_id,order_date,shipped_date, customer_id,freight
+FROM orders
+ORDER BY freight DESC limit 10
+
+--5
+SELECT lower(customer_id) AS ID 
+FROM customers
+
+--6
+SELECT Company_Name, Fax, Phone, Country, HomePage 
+FROM suppliers
+ORDER BY Country DESC, Company_Name
+
+--7
+SELECT Contact_Name, Company_Name
+FROM customers
+WHERE city = 'Buenos Aires'
+
+--8
+SELECT Product_Name, Unit_Price, Quantity_Per_Unit 
+FROM products
+WHERE Units_in_stock = 0
+
+--9
+SELECT Contact_Name, Address ,city 
+FROM customers
+WHERE country NOT IN ('Germany', 'Mexico', 'Spain')
+
+--10
+SELECT order_date,shipped_date, customer_id,freight
+FROM orders
+WHERE order_date = '1996-05-21';
+
+--11
+SELECT first_name, last_name, Country
+FROM employees
+WHERE country <> 'USA'
+
+--12
+SELECT employee_id ,order_id, customer_id,required_date,shipped_date
+FROM orders
+WHERE shipped_date > required_date;
+
+--13
+SELECT city, company_name ,contact_name
+FROM customers
+WHERE city LIKE 'A%' OR city LIKE 'B%'
+
+--14
+SELECT order_id
+FROM orders 
+WHERE mod(order_id,2) = 0
+
+--15
+SELECT *
+FROM orders
+WHERE freight > 500;
+
+--16
+SELECT Product_Name, Units_In_Stock, Units_On_Order, Reorder_Level
+FROM products
+WHERE Reorder_Level = 0
+
+--17
+SELECT Company_Name, Contact_Name, fax 
+FROM customers
+WHERE Fax is null
+
+--18
+SELECT first_name, last_name
+FROM employees
+WHERE reports_to IS NULL
+
+--19
+SELECT order_id
+FROM orders
+WHERE mod(order_id,2) = 1
+
+--20
+SELECT company_name,contact_name,fax
+FROM customers
+WHERE fax IS NOT NULL ORDER BY contact_name
+
+--21
+SELECT city,company_name,contact_name
+FROM customers
+WHERE city LIKE '%L%' ORDER BY contact_name
+
+--22
+SELECT first_name,Last_name,birth_date
+FROM employees 
+WHERE EXTRACT(YEAR FROM birth_date) = 1950
+
+--23
+SELECT First_Name, Last_Name, EXTRACT(YEAR FROM birth_date) AS birth_date
+FROM employees 
+
+--24
+SELECT Order_ID ,count(Order_ID) AS NumberofOrders
+From order_details
+GROUP BY Order_ID
+ORDER BY NumberofOrders DESC;
+
+--25
+SELECT products.supplier_id, products.product_name, Suppliers.company_name
+FROM products JOIN Suppliers ON Suppliers.supplier_id = products.supplier_id
+WHERE Suppliers.company_name IN ('Exotic Liquids', 'Specialty Biscuits, Ltd.', 'Escargots Nouveau')
+ORDER BY products.supplier_id
+
+--26
+SELECT Ship_Postal_Code, Order_ID, Order_Date, Required_Date, Shipped_Date, Ship_Address
+FROM orders
+WHERE Ship_Postal_Code LIKE '98124%'
+
+--27
+SELECT Contact_Name, Contact_Title, Company_Name
+FROM customers
+WHERE Contact_Title NOT LIKE 'Sales%'
+
+--28
+SELECT Last_Name, First_Name, City 
+FROM employees 
+WHERE City <> 'Seattle'
+
+--29
+SELECT Company_Name,Contact_Title,City,Country
+FROM Customers
+WHERE (Country = 'Mexico') OR (Country = 'Spain' AND City <> 'Madrid')
+
+--30
+SELECT CONCAT( first_name,' ', last_name ,' can be reached at ', 'x',extension ) AS contact_info 
+FROM employees;
+
+--31
+SELECT contact_name 
+FROM customers 
+where contact_name NOT like '_A%';
+
+--32
+CEIL
+SELECT CEIL(avg (unit_price)) AS average_price, SUM(units_in_stock) AS total_stock, max(units_on_order) as max_order 
+FROM products;
+
+--33
+SELECT s.supplier_id, s.company_name, c.category_name, p.product_name, p.unit_price 
+FROM products p JOIN suppliers s ON s.supplier_id = p.supplier_id JOIN categories C On c.category_id = p.category_id;
+
+--34
+SELECT customer_id, sum(freight) 
+FROM orders 
+GROUP BY customer_id 
+HAVING sum(freight) > '200';
+
+--35
+SELECT od.order_id, c.contact_name,od.unit_price,od.quantity,od.Discount FROM order_details od JOIN orders o ON od.order_id = o.order_id 
+JOIN customers c ON c.customer_id = o.customer_id 
+WHERE od.Discount != '0';
+
+--36
+SELECT a.employee_id
+, CONCAT (a.last_name, ' ' ,a.first_name ) as employee
+, CONCAT (b.last_name,' ' , b.first_name ) as manager 
+FROM employees a LEFT JOIN employees b ON b.employee_id = a.reports_to 
+ORDER BY a.employee_id;
+
+--37
+SELECT
+  AVG(Unit_Price) AS Average_Price,
+  MIN(Unit_Price) AS Minimum_Price,
+  MAX(Unit_Price) AS Maximum_Price
+FROM
+  Products;

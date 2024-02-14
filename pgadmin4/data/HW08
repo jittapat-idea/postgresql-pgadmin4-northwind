@@ -1,0 +1,221 @@
+--51
+SELECT category_name,country,count(*) AS count
+FROM products P,order_details O,categories C,suppliers S
+WHERE O.product_id = P.product_id AND P.category_id = C.category_id AND P.supplier_id = S.supplier_id
+GROUP BY category_name,country
+ORDER BY category_name,count(*) DESC,country
+
+--52
+SELECT  S.supplier_id,P.product_name ,S.company_name
+FROM products P 
+JOIN suppliers S ON (S.supplier_id = P.supplier_id )
+WHERE S.company_name IN ('Exotic Liquids','Grandma Kelly''s Homestead','Tokyo Traders')
+
+--53
+SELECT P.product_name, P.product_id ,C.category_name,C.category_id
+FROM products P 
+JOIN categories C ON (C.category_id = P.category_id) 
+WHERE C.category_name LIKE 'Seafood'
+
+--54
+SELECT COUNT(S.company_name),P.category_id,S.company_name
+FROM  products P 
+JOIN suppliers S ON (S.supplier_id = P.supplier_id ) AND P.category_id = 8
+GROUP BY S.company_name,P.category_id
+
+--55
+SELECT COUNT(S.company_name),P.category_id,S.company_name,C.category_name
+FROM  products P 
+JOIN suppliers S ON (S.supplier_id = P.supplier_id ) 
+JOIN categories C ON (C.category_id = P.category_id) AND C.category_name LIKE 'Seafood' 
+GROUP BY S.company_name,P.category_id,C.category_name
+
+--56
+SELECT O.Order_id ,C.company_name ,E.first_name|| '' ||E.last_name
+FROM orders O 
+JOIN customers C ON (O.customer_id = C.customer_id) 
+JOIN employees E ON (E.employee_id = O.employee_id)
+WHERE O.order_date > '1-jan-1998' AND O.shipped_date > O.required_date 
+
+--57
+SELECT S.company_name,P.product_name
+FROM suppliers S 
+JOIN products P ON (S.supplier_id = P.supplier_id )
+
+--58
+SELECT O.Order_id,E.employee_id,E.first_name|| '' ||E.last_name
+FROM orders O 
+JOIN employees E ON (E.employee_id = O.employee_id) 
+WHERE O.shipped_date > O.required_date 
+ORDER BY E.employee_id
+
+--59
+SELECT SUM(O.quantity),P.product_name
+FROM products P 
+JOIN Order_Details O ON (O.product_id = P.product_id)
+GROUP BY P.product_name
+HAVING SUM(O.quantity) < 200
+
+--60
+SELECT C.company_name, COUNT(O.order_id)
+FROM orders O JOIN customers C ON (O.customer_id = C.customer_id)
+WHERE O.order_date > '31-dec-1996' 
+GROUP BY C.company_name
+HAVING COUNT(O.order_id) > 15
+
+--61
+SELECT C.company_name, O.order_id , 
+		ORD.quantity, 
+		((ORD.unit_price) - (ORD.unit_price * ORD.discount)) * (ORD.quantity) AS total,
+		(((ORD.unit_price) - (ORD.unit_price * ORD.discount)) * (ORD.quantity))::numeric::money AS total,
+		TO_CHAR((((ORD.unit_price) - (ORD.unit_price * ORD.discount)) * (ORD.quantity)),'L999G999D99')AS total_to_char
+FROM orders O 
+JOIN customers C ON (O.customer_id = C.customer_id) 
+JOIN order_details ORD ON (ORD.order_id = O.order_id)
+WHERE ((ORD.unit_price) - (ORD.unit_price * ORD.discount)) * (ORD.quantity) > 10000
+
+--62
+SELECT COUNT(DISTINCT(E.employee_id)) AS numemp,
+        COUNT(DISTINCT(C.customer_id)) AS numcus,
+		E.city,
+		C.city
+FROM employees E JOIN customers C ON (E.city = C.city)
+GROUP BY E.city,C.city
+ORDER BY numemp
+
+--63
+SELECT customer_id,company_name,(CASE WHEN fax IS NULL THEN 'No fax' ELSE fax END) fax
+FROM customers
+
+--64
+SELECT C.category_name,S.country ,COUNT(*) DESC
+FROM categories C,suppliers S,order_details O, products P
+WHERE O.product_id = P.product_id AND P.category_id = C.category_id AND P.supplier_id = S.supplier_id
+GROUP BY category_name,country
+ORDER BY COUNT(*) DESC, C.category_name
+LIMIT 3
+
+--65
+SELECT first_name,
+		last_name,
+		DATE_PART('YEAR',order_date) AS YEAR,
+		(SUM((1 - discount) * ODR.unit_price * quantity))::NUMERIC::money AS totalamount
+FROM orders O,order_details ODR,employees E
+WHERE O.order_id = ODR.order_id AND O.employee_id = E.employee_id
+GROUP BY first_name,last_name,DATE_PART('YEAR',order_date)
+ORDER BY first_name,last_name,DATE_PART('YEAR',order_date)
+
+--66
+SELECT DATE_PART('MONTH',orders.order_date) AS month_number,
+SUM(((1-order_details.discount) * order_details.unit_price * 
+	 order_details.quantity))::NUMERIC(10,2)AS totalamount
+FROM orders JOIN order_details ON order_details.order_id = orders.order_id
+WHERE orders.employee_id = 9 
+AND orders.order_date > '1997-01-01 00:00:00' 
+AND orders.order_date < '1998-01-01 00:00:00'
+GROUP BY month_number
+ORDER BY month_number
+
+SELECT TO_CHAR(orders.order_date,'MM') AS month_number,
+TO_CHAR(orders.order_date,'Mon') AS month_name,
+SUM(((1-order_details.discount) * order_details.unit_price * 
+	 order_details.quantity))::NUMERIC(10,2)AS totalamount
+FROM orders JOIN order_details ON order_details.order_id = orders.order_id
+WHERE orders.employee_id = 9 
+AND orders.order_date > '1997-01-01 00:00:00' 
+AND orders.order_date < '1998-01-01 00:00:00'
+GROUP BY month_number,month_name
+ORDER BY month_number
+
+--68
+SELECT suppliers.country,
+TO_CHAR(orders.order_date,'Mon') AS MON,
+--TO_CHAR(orders.order_date,'Mon') AS month_name,
+SUM(((1-order_details.discount) * order_details.unit_price * 
+	 order_details.quantity))::NUMERIC(10,2)AS totalamount
+FROM orders 
+JOIN order_details ON order_details.order_id = orders.order_id
+JOIN products ON products.product_id = order_details.product_id
+JOIN suppliers ON suppliers.supplier_id = products.supplier_id
+--WHERE suppliers.country = 'Japan'
+GROUP BY suppliers.country, MON
+ORDER BY suppliers.country, MON
+
+SELECT suppliers.country,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Jan' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Jan,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Feb' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Feb,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Mar' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Mar,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Apr' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Apr,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'May' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS May,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Jun' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Jun,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Jul' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Jul,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Aug' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Aug,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Sep' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Sep,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Oct' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Oct,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Nov' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Nov,
+SUM(CASE TO_CHAR(orders.order_date, 'Mon') WHEN 'Dec' THEN 
+	(1-order_details.discount)* order_details.unit_price * order_details.quantity 
+	ELSE 0 END)::NUMERIC(10,2)AS Dec,
+SUM ((1-order_details.discount)* order_details.unit_price * order_details.quantity )AS Total
+FROM orders 
+JOIN order_details ON order_details.order_id = orders.order_id
+JOIN products ON products.product_id = order_details.product_id
+JOIN suppliers ON suppliers.supplier_id = products.supplier_id
+GROUP BY suppliers.country
+ORDER BY suppliers.country
+
+--69
+SELECT order_details.order_id, products.product_name,order_details.unit_price,order_details.quantity,order_details.discount,
+ROUND(order_details.unit_price * order_details.quantity * (1-order_details.discount))
+AS Extended_price
+FROM order_details 
+JOIN products ON order_details.product_id = products.product_id
+ORDER BY order_details.order_id,products.product_name
+
+--72
+SELECT a.product_name,
+    d.company_name,
+    extract(YEAR FROM order_date) AS orderyear,
+    (sum(CASE extract(QUARTER FROM c.order_date)
+                                        WHEN '1' THEN b.unit_price * b.quantity * (1 - b.discount) ELSE 0 END)) "Qtr 1",
+    (sum(CASE extract(QUARTER FROM c.order_date)
+                                        WHEN '2' THEN b.unit_price * b.quantity * (1 - b.discount) ELSE 0 END)) "Qtr 2",
+    (sum(CASE extract(QUARTER FROM c.order_date)
+                                        WHEN '3' THEN b.unit_price * b.quantity * (1 - b.discount) ELSE 0 END)) "Qtr 3",
+    (sum(CASE extract(QUARTER FROM c.order_date)
+                                        WHEN '4' THEN b.unit_price * b.quantity * (1 - b.discount) ELSE 0 END)) "Qtr 4"
+FROM products a
+INNER JOIN order_details b ON a.product_id = b.product_id
+INNER JOIN orders c ON c.order_id = b.order_id
+INNER JOIN customers d ON d.customer_id = c.customer_id
+INNER JOIN suppliers s ON s.supplier_id = a.supplier_id
+WHERE c.order_date BETWEEN date('1997-01-01') AND date('1997-12-31') AND s.country = 'Japan'
+GROUP BY a.product_name,
+    d.company_name,
+    extract(YEAR FROM order_date)
+ORDER BY a.product_name,
+    d.company_name;
+
+
